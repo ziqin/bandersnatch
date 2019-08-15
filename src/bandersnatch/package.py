@@ -6,6 +6,7 @@ import sys
 import time
 from datetime import datetime
 from json import dump
+from os import environ
 from pathlib import Path
 from typing import Dict, Optional
 from urllib.parse import unquote, urlparse
@@ -35,6 +36,7 @@ class Package:
         # This is really only useful for pip 8.0 -> 8.1.1
         self.normalized_name_legacy = pkg_resources.safe_name(name).lower()
         self.mirror = mirror
+        self.customized_host = environ.get("CUSTOMIZED_HOST")  # Hack
 
     @property
     def json_file(self) -> Path:
@@ -352,6 +354,10 @@ class Package:
                     )
                 )
                 path.unlink()
+
+        # Hack: download from another host
+        if self.customized_host is not None and url.startswith("https://files.pythonhosted.org/"):
+            url = url.replace("https://files.pythonhosted.org/", self.customized_host)
 
         logger.info(f"Downloading: {url}")
 
